@@ -12,7 +12,7 @@ Model name is converted to lowercase for the collection name:
 """
 
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional, Literal
 
 # Example schemas (replace with your own):
 
@@ -38,11 +38,17 @@ class Product(BaseModel):
     category: str = Field(..., description="Product category")
     in_stock: bool = Field(True, description="Whether product is in stock")
 
-# Add your own schemas here:
-# --------------------------------------------------
+# Subscription-related schemas for the pricing and payment flow
 
-# Note: The Flames database viewer will automatically:
-# 1. Read these schemas from GET /schema endpoint
-# 2. Use them for document validation when creating/editing
-# 3. Handle all database operations (CRUD) directly
-# 4. You don't need to create any database endpoints!
+class Subscription(BaseModel):
+    """
+    Subscriptions created when a user starts checkout for a plan.
+    Collection name: "subscription"
+    """
+    plan_id: str = Field(..., description="ID of the selected pricing plan")
+    plan_name: str = Field(..., description="Name of the plan at purchase time")
+    price: float = Field(..., ge=0, description="Price in USD at purchase time")
+    interval: Literal["month", "year"] = Field("month", description="Billing interval")
+    email: str = Field(..., description="Customer email (from Clerk or input)")
+    user_id: Optional[str] = Field(None, description="Clerk user ID if available")
+    status: Literal["pending", "active", "canceled", "failed"] = Field("pending", description="Subscription status")
